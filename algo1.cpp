@@ -33,25 +33,15 @@ void displayGraph(){
 }
 
 void constructMIS(){
-    vector<bool> inMIS(n, false);
+    vector<bool> vis(n, false);
     count_of_MIS_neighbors.resize(n, 0);
-    inMIS[0] = 1;
-    int count;
-    for(int i=1;i<n;i++){
-        count = 0;
-        for(auto j : graph[i]){
-            if(inMIS[j]){
-                count++;
-            }
-        }
-        count_of_MIS_neighbors[i] = count;
-        if(count_of_MIS_neighbors[i] == 0){
-            inMIS[i] = true;
-        }
-    }
     for(int i=0;i<n;i++){
-        if(inMIS[i]){
+        if(vis[i] == false){
             mis.insert(i);
+            for(auto v : graph[i]){
+                vis[v] = true;
+                count_of_MIS_neighbors[v]++;
+            }
         }
     }
 }
