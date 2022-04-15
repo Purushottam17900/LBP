@@ -43,13 +43,13 @@ void partitionGraph(){
 }
 
 set<int> staticMIS(set<int> &Vs){
-    vector<bool> vis(n, false);
+    set<int> vis;
     set<int> res;
     for(auto u : Vs){
-        if(vis[u] == false){
+        if(vis.find(u) == vis.end()){
             res.insert(u);
             for(auto v : graph[u]){
-                vis[v] = true;
+                vis.insert(v);
             }
         }
     }
@@ -196,6 +196,7 @@ int main(){
         if((m == m_c/2) || (m == 2*m_c)){
             initialize();
         }
+        printMIS();
     }
     printMIS();
 }
