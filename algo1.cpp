@@ -46,14 +46,6 @@ void constructMIS(){
     }
 }
 
-void printMIS(){
-    cout << "MIS vertices are : ";
-    for(auto i: mis){
-        cout << i << " ";
-    }
-    cout << endl;
-}
-
 void edgeDeletion(int u, int v){
     if(mis.find(u) != mis.end()){
         count_of_MIS_neighbors[v]--;
@@ -106,6 +98,13 @@ void edgeInsertion(int u, int v){
     graph[v].push_back(u);
 }
 
+void printMIS(){
+    cout << "MIS vertices are : ";
+    for(auto i: mis){
+        cout << i << " ";
+    }
+    cout << endl;
+}
 
 int main(){
     inputGraph();
@@ -133,6 +132,7 @@ int main(){
         else{
             break;
         }
+        printMIS();
     }
     displayGraph();
     printMIS();
