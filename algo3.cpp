@@ -1,11 +1,12 @@
 #include<bits/stdc++.h>
 using namespace std;
+using namespace std::chrono;
 
 vector<set<int>> graph;
 int n, m;
-set<int> mis;
+//set<int> mis;
+vector<bool> mis;
 vector<int> dominator;
-vector<set<int>> dominated_by;
 
 void inputGraph(){
     cout << "Enter no of vertices : ";
@@ -13,6 +14,7 @@ void inputGraph(){
     cout << "Enter no of edges : ";
     cin >> m;
     graph.resize(n, set<int>());
+
     cout << "Enter the edges as vertices pair : " << endl;
     int u, v;
     for(int i=0;i<m;i++){
@@ -25,17 +27,15 @@ void inputGraph(){
 void greedyMIS(){
     vector<bool> vis(n, false);
     dominator.resize(n, -1);
-    dominated_by.resize(n, set<int>());
+    mis.resize(n, 0);
     for(int i=0;i<n;i++){
         if(!vis[i]){
-            mis.insert(i);
+            mis[i] = 1;
             dominator[i] = i;
-            dominated_by[i].insert(i);
             for(auto v : graph[i]){
                 if(!vis[v]){
                     vis[v] = true;
                     dominator[v] = i;
-                    dominated_by[i].insert(v);
                 }
             }
         }
@@ -43,14 +43,12 @@ void greedyMIS(){
 }
 
 void edgeDeletion(int u, int v){ // (u < v)
-    if(mis.find(u) != mis.end()){ 
-        if(dominated_by[u].find(v) != dominated_by[u].end()){
+    if(mis[u]){ 
+        if(dominator[v] == u){
             for(auto w : graph[v]){
-                if(mis.find(w) != mis.end()){
-                    if(w < v){
-                        dominated_by[u].erase(v);
+                if(mis[w]){
+                    if((w < v) && (w > u)){
                         dominator[v] = w;
-                        dominated_by[w].insert(v);
                         return;
                     }
                     else{
@@ -58,22 +56,21 @@ void edgeDeletion(int u, int v){ // (u < v)
                     }
                 }
             }
-            mis.insert(v);
-            dominated_by[u].erase(v);
+            mis[v] = 1;
             dominator[v] = v;
-            dominated_by[v].insert(v);
             for(auto w : graph[v]){
-                if(mis.find(w) != mis.end()){
-                    for(auto x : dominated_by[w]){
-                        edgeDeletion(w, x);  
+                if(mis[w]){
+                    for(auto x : graph[w]){
+                        if(dominator[x] == w){
+                            edgeDeletion(w, x);
+                        }
                     }
-                    mis.erase(w);
+                    mis[w] = 0;
+                    dominator[w] = v;
                 }
                 else{
                     if(dominator[w] > v){
-                        dominated_by[dominator[w]].erase(w);
                         dominator[w] = v;
-                        dominated_by[v].insert(w);
                     }
                 }
             }
@@ -82,36 +79,51 @@ void edgeDeletion(int u, int v){ // (u < v)
 }
 
 void edgeInsertion(int u, int v){
-    if((mis.find(u) != mis.end()) && (mis.find(v) != mis.end())){
-        for(auto w : dominated_by[v]){
-            edgeDeletion(v, w);
+    if(mis[u] && mis[v]){
+        for(auto w : graph[v]){
+            if(dominator[w] == v){
+                edgeDeletion(v, w);
+            }
         }
-        mis.erase(v);
+        mis[v] = 0;
+        dominator[v] = u;
     }
-    else if(mis.find(u) != mis.end()){
+    else if(mis[u]){
         if(dominator[v] > u){
-            dominated_by[dominator[u]].erase(v);
             dominator[v] = u;
-            dominated_by[u].insert(v);
         }
     }
 }
 
 void printMIS(){
     cout << "MIS vertices are : ";
-    for(auto i: mis){
-        cout << i << " ";
+    for(int i=0;i<n;i++){
+        if(mis[i]){
+            cout << i << " ";
+        }
     }
     cout << endl;
 }
 
+void printDominators(){
+    for(int i=0;i<n;i++){
+        cout << i << " dominated by : " << dominator[i] << endl;
+    }
+}
+
 int main(){
+    // #ifndef ONLINE_JUDGE
+	// 	freopen("output_3.txt","r", stdin);
+	// 	freopen("answer_3.txt","w", stdout);
+	// #endif
     inputGraph();
     greedyMIS();
     printMIS();
+    //printDominators();
 
-    int c, u, v;
-    while(true){
+    int c, u, q, v;
+    //cin >> q;
+    while(q--){
         cout << "\tEnter \"0\" for edge deletion \n\tEnter \"1\" for edge insertion \n\tEnter \"other number\" to exit:  ";
         cin >> c;
         
@@ -119,12 +131,19 @@ int main(){
             cout << "Enter vertices : ";
             cin >> u >> v;
             if(u > v){
-                swap(u, v);
+                int t = u;
+                u = v;
+                v = t;
             }
-            graph[u].erase(v);
-            graph[v].erase(u);
-            edgeDeletion(u, v);
-            m--;
+            if(graph[u].find(v) == graph[u].end()){
+                //cout << "No such edge exists \n" ;
+            }
+            else{
+                graph[u].erase(v);
+                graph[v].erase(u);
+                edgeDeletion(u, v);
+                m--;
+            }
         }
         else if(c == 1){
             cout << "Enter vertices : ";
@@ -132,15 +151,21 @@ int main(){
             if(u > v){
                 swap(u, v);
             }
-            graph[u].insert(v);
-            graph[v].insert(u);
-            edgeInsertion(u, v);
-            m++;
+            if(graph[u].find(v) != graph[u].end()){
+                //cout << "This edge already exists \n" ;
+            }
+            else{
+                graph[u].insert(v);
+                graph[v].insert(u);
+                edgeInsertion(u, v);
+                m++;    
+            }
         }
         else{
             break;
         }
         printMIS();
+        //printDominators();
     }
     printMIS();
 }
