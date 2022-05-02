@@ -1,7 +1,8 @@
 #include<bits/stdc++.h>
 using namespace std;
+using namespace std::chrono;
 
-vector<vector<int>> graph;
+vector<set<int>> graph;
 int n, m;
 int m_c;
 set<int> mis;
@@ -11,18 +12,18 @@ set<int> lowV, highV, lowMIS, highMIS;
 int deltaC;
 
 void inputGraph(){
-    cout << "Enter no of vertices : ";
+    //cout << "Enter no of vertices : ";
     cin >> n;
-    cout << "Enter no of edges : ";
+    //cout << "Enter no of edges : ";
     cin >> m;
-    graph.resize(n, vector<int>());
+    graph.resize(n, set<int>());
     degreeV.resize(n, 0);
-    cout << "Enter the edges as vertices pair \"(u v)\" : " << endl;
+    //cout << "Enter the edges as vertices pair \"(u v)\" : " << endl;
     int u, v;
     for(int i=0;i<m;i++){
         cin >> u >> v;
-        graph[u].push_back(v);
-        graph[v].push_back(u);
+        graph[u].insert(v);
+        graph[v].insert(u);
         degreeV[u]++;
         degreeV[v]++;
     }
@@ -68,7 +69,8 @@ void heavyMIS(){
 }
 
 void initialize(){
-    deltaC = (int)(pow(m, (2/3)));
+    cout << "initialize \n";
+    deltaC = (int)(pow(m, (0.6666667)));
     m_c = m;
     partitionGraph();
     lowCount.resize(n, 0);
@@ -82,22 +84,8 @@ void initialize(){
 }
 
 void edgeDeletion(int u, int v){
-    int p;
-    for(int i=0;i<graph[u].size();i++){
-        if(graph[u][i] == v){
-            p = i;
-            break;
-        }
-    }
-    graph[u].erase(graph[u].begin()+p);
-
-    for(int i=0;i<graph[v].size();i++){
-        if(graph[v][i] == u){
-            p = i;
-            break;
-        }
-    }
-    graph[v].erase(graph[v].begin()+p);
+    graph[u].erase(v);
+    graph[v].erase(u);
 
     if(lowMIS.find(u) != lowMIS.end()){
         lowCount[v]--;
@@ -146,19 +134,19 @@ void edgeInsertion(int u, int v){
     else if(lowMIS.find(v) != lowMIS.end()){
         lowCount[u]++;
     }
-    graph[u].push_back(v);
-    graph[v].push_back(u);
+    graph[u].insert(v);
+    graph[v].insert(u);
 
     heavyMIS();
 }
 
 void printMIS(){
-    cout << "lowMIS : ";
+    //cout << "lowMIS : ";
     for(auto i : lowMIS){
         cout << i << " ";
     }
-    cout << endl;
-    cout << "highMIS : ";
+    //cout << endl;
+    //cout << "highMIS : ";
     for(auto i : highMIS){
         cout << i << " ";
     }
@@ -166,37 +154,68 @@ void printMIS(){
 }
 
 int main(){
+    #ifndef ONLINE_JUDGE
+		freopen("testcase.txt","r", stdin); //input file
+		freopen("answer.txt","w", stdout); // output file
+	#endif
+
     inputGraph();
     initialize();
     printMIS();
+
+    auto start = high_resolution_clock::now();
+
     int c, u, v;
+    int q;
+    //cin >> q;
+    int phase_change_count = 0;
     while(true){
-        cout << "\tEnter \"0\" for edge deletion \n\tEnter \"1\" for edge insertion \n\tEnter \"other number\" to exit:  ";
+        //cout << "\tEnter \"0\" for edge deletion \n\tEnter \"1\" for edge insertion \n\tEnter \"other number\" to exit:  ";
         cin >> c;
         
         if(c == 0){
-            cout << "Enter vertices : ";
+            //cout << "Enter vertices : ";
             cin >> u >> v;
-            edgeDeletion(u, v);
-            degreeV[u]--;
-            degreeV[v]--;
-            m--;
+            if(graph[u].find(v) == graph[u].end()){
+                //cout << "No such edge exists \n" ;
+            }
+            else{
+                edgeDeletion(u, v);
+                degreeV[u]--;
+                degreeV[v]--;
+                m--;
+            }
         }
         else if(c == 1){
-            cout << "Enter vertices : ";
+            //cout << "Enter vertices : ";
             cin >> u >> v;
-            edgeInsertion(u, v);
-            degreeV[u]++;
-            degreeV[v]++;
-            m++;
+            if(graph[u].find(v) != graph[u].end()){
+                //cout << "This edge already exists \n" ;
+            }
+            else{
+                edgeInsertion(u, v);
+                degreeV[u]++;
+                degreeV[v]++;
+                m++;
+            }
         }
         else{
             break;
         }
         if((m == m_c/2) || (m == 2*m_c)){
             initialize();
+            phase_change_count++;
         }
-        printMIS();
+        //printMIS();
     }
-    printMIS();
+    //printMIS();
+
+    auto stop = high_resolution_clock::now();
+    
+    auto duration = duration_cast<microseconds>(stop - start);
+ 
+    cout << "phase_change_count : " << phase_change_count << endl;
+    cout << "Time taken by program: "
+         << duration.count() << " microseconds" << endl;
+
 }
