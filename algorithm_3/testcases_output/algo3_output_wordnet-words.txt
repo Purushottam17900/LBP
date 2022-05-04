@@ -1,0 +1,8 @@
+Number of vertices : 146005
+Number of edges : 656999
+number of light vertices : 146005
+number of heavy vertices : 0
+
+Number of insertions : 33333
+Number of deletions : 16667
+Time taken by program: 439545 microseconds
